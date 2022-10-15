@@ -1,6 +1,7 @@
 import './App.css';
 import Form from './components/Form';
 import Results from './components/Results';
+import Loading from './components/Loading';
 import Title from './components/Title'; //importは取り込むという意味なのでこのコンポーネントを取り込んだという意味になる
 import { useState } from "react";
 import axios from "axios";
@@ -10,6 +11,7 @@ function App() {
   //このsetCityを使うことでcity内のデータを操作することができる。
   //useStateの括弧の中が初期値になる
   const [ city, setCity ] = useState(""); 
+  const [ loading, setLoading ] = useState(false);
   const [ results, setResults ] = useState({
     country: "",
     cityName: "",
@@ -23,6 +25,7 @@ function App() {
     //https://qiita.com/tochiji/items/4e9e64cabc0a1cd7a1ae 参考サイト
     e.preventDefault();
     //取得する場合はget。送る場合はpostなどそれぞれの規格を記述する。
+    setLoading(true);
     axios.get(`http://api.weatherapi.com/v1/current.json?key=86a743cb49804db7a43193356221410&q=${city}&aqi=no`)
     //thenはそして、その後でという意味でAPIにデータを送った後の処理を書く
     //resはreponceの略でAPIから送られてきたデータが入っている。
@@ -36,15 +39,20 @@ function App() {
           conditionText: res.data.current.condition.text,
           icon: res.data.current.condition.icon
         })
-      }) //console.logの括弧の中に確認したいデータを入れる
+        setCity("")
+        setLoading(false);
+      })
+      //エラー処理を記述する
+      .catch(err => alert("エラーが発生しました。もう一度リトライしてください"));
   }
 
 
   return (
     <div className="App">
       <Title /> {/* 大文字で書くことでこれがReactのタグであることをReactに伝えている */}
-      <Form setCity={setCity} getWeather={getWeather} /> {/* 名前={渡すもの}　という感じになっているので、これにアクセスするにはprops.名前になる　*/ }
-      <Results results={results} />
+      <Form setCity={setCity} getWeather={getWeather} city={city} /> {/* 名前={渡すもの}　という感じになっているので、これにアクセスするにはprops.名前になる　*/ }
+      {/* if文で、もし左辺がtrueの時、右辺を表示する */}
+      { loading ? <Loading /> : <Results results={results} /> } {/* 左記は三項演算子を使用している https://qiita.com/smicle/items/7d3b9881834dc0142fb7 */}
     </div>
   );
 };
